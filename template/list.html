@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+
+    <script>
+      window.files = {{DIR_JSON}};
+    </script>
+  </head>
+  <body>
+    <div id="list">
+
+    </div>
+    <script>
+      function insertItem(name,type){
+        var template = "<a href=''></a>";
+        var ele = document.createElement("div");
+        ele.innerHTML = template;
+        var a = ele.getElementsByTagName("a")[0];
+        a.innerText = name;
+        a.href = location.href + "/" + encodeURIComponent(name);
+        document.getElementById("list").appendChild(ele);
+      }
+      for(var i=0;i<files.length;i++){
+        var e =files[i];
+        insertItem(e.name,e.type);
+      }
+    </script>
+  </body>
+</html>

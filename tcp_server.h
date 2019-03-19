@@ -39,6 +39,7 @@ public:
       type = type + "EPOLLHUP|";
     }
     cout<<getFdAddress(fd)<<":"<<type<<endl;
+    cout<<socket_write_job_queue_map.size()<<"|"<<socket_read_job_queue_map.size()<<endl;
   }
   virtual void closeSocket(int fd);
   void closeSocketNextTick(int fd){

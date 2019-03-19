@@ -8,6 +8,9 @@
 #include "file_helper.h"
 #include "tcp_send_file.h"
 #include "tcp_send_string.h"
+#include "http_request_header.h"
+#include "http_send_dir.h"
+#include "http_helper.h"
 using namespace std;
 class HttpParser:public Job{
 private:
@@ -75,7 +78,8 @@ public:
     this->server->addWriteJobFor(fd, new TCPSendString(this->server, this->fd,str));
   }
   void onHeaderParsed(int headerEndPos){
-    map<string,string> headers;
+    HttpRequestHeader request;
+    map<string,string> & headers = request.headers;
     buffer[headerEndPos] = '\0';
     string line;
     istringstream header_stream(buffer);
@@ -84,10 +88,10 @@ public:
       return;
     }
     istringstream req_stream(line);
-    string method,path,http_version;
-    if(!(req_stream >> method>>path>>http_version)){
+    if(!(req_stream >> request.method>>request.path>>request.http_version)){
       return;
     }
+    request.path = urlDecode(request.path);
     while(getline(header_stream, line,'\r')){
       istringstream iss(line);
       string part1;
@@ -105,13 +109,13 @@ public:
       }
       headers[part1] = part2;
     }
-    for(auto a:headers){
-      cout<<a.first<<":"<<a.second<<endl;
-    }
+    handleGetRequest(request);
+  }
+  void handleGetRequest(HttpRequestHeader & request){
+    string & path = request.path;
     path = regex_replace(path, regex("\\.\\."),"");
-    path = "./" + path;
+    path = "/mnt/c/Users/yxz/Downloads/" + path;
     cout<<path<<endl;
-    
     struct stat file_stat;
     if(stat(path.c_str(),&file_stat) <0){
       send404();
@@ -126,11 +130,13 @@ public:
       writeString(to_string(len).c_str());
       writeString("\r\n\r\n");
       this->server->addWriteJobFor(fd, new TCPSendFile(this->server, fd,file_fd,0,len));
-    }else{
+    }else if(isDir(file_stat)){
+      this->server->addWriteJobFor(fd, new HttpSendDir(this->server, this->fd,path.c_str()));
+    }
+    else{
       send404();
       return;
     }
-
   }
   void send404(){
     writeString("HTTP/1.1 404 ObjectNotFound\r\nContent-Type: text/plain\r\nContent-Length: 3\r\n\r\n404");

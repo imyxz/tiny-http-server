@@ -16,6 +16,7 @@
     "tuple": "cpp",
     "set": "cpp",
     "fstream": "cpp",
-    "iosfwd": "cpp"
+    "iosfwd": "cpp",
+    "sstream": "cpp"
   }
 }
